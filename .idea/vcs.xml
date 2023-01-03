@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/doctest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/fmt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/parallel-hashmap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/physfs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/pugixml" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/quirrel" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/rapidjson" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/rapidjson/thirdparty/gtest" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/sokol" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/sokol-tools-bin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/sokol_gp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/tracy" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/tracy/vcpkg/vcpkg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/deps/vmcontainer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/glm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/parallel-hashmap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/physfs" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/pugixml" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/engine/ext/quirrel" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/xmake-repo" vcs="Git" />
+  </component>
+</project>

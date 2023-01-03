@@ -1,0 +1,68 @@
+//
+// Created by lasagnaphil on 2021-07-25.
+//
+
+#include "resources.h"
+
+#include "reflected_headers.h"
+#include "engine.h"
+#include "squirrel/scriptable_impl.h"
+
+Resources::Resources() {
+    push_label(make_res_label("all"));
+}
+
+Resources::~Resources() {
+
+}
+
+void Resources::push_label(ResourceLabel label) {
+    label_stack.push_back(label);
+    set_labels_for_resource_pools(label);
+}
+
+void Resources::pop_label() {
+    assert(label_stack.size() > 1);
+    label_stack.pop_back();
+    set_labels_for_resource_pools(label_stack.back());
+}
+
+void Resources::release_with_label(ResourceLabel label) {
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    pool_{{name}}.release(label);
+    {% if "Node" in cls.ancestors: %}
+    pool_{{name}}_scriptable.release(label);
+    {% endif %}
+    {% endfor %}
+}
+
+void Resources::set_labels_for_resource_pools(ResourceLabel label) {
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    pool_{{name}}.set_resource_label(label);
+    {% if "Node" in cls.ancestors: %}
+    pool_{{name}}_scriptable.set_resource_label(label);
+    {% endif %}
+    {% endfor %}
+}
+
+void Resources::scriptable_update(float dt) {
+    auto vm = Engine::instance().get_vm();
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    {% if "Node" in cls.ancestors: %}
+    pool_{{name}}_scriptable.foreach([vm, dt](Scriptable<{{name}}>& script) {
+        script.update(*vm, dt);
+    });
+    {% endif %}
+    {% endfor %}
+}
+
+void Resources::scriptable_render() {
+    auto vm = Engine::instance().get_vm();
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    {% if "Node" in cls.ancestors: %}
+    pool_{{name}}_scriptable.foreach([vm](Scriptable<{{name}}>& script) {
+        script.render(*vm);
+    });
+    {% endif %}
+    {% endfor %}
+}

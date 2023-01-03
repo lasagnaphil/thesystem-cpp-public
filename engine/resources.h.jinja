@@ -1,0 +1,135 @@
+//
+// Created by lasagnaphil on 2021-07-25.
+//
+
+#ifndef THESYSTEM_RESOURCES_H
+#define THESYSTEM_RESOURCES_H
+
+#include "resource_pool.h"
+
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+#include "squirrel/scriptable.h"
+
+// Forward declaration
+{% for name, cls in class_db.items(): %}
+class {{name}};
+{% endfor %}
+
+template <class T>
+class Scriptable;
+
+template <class T>
+struct is_resource {
+    static constexpr bool value = false;
+};
+
+template <class T>
+inline constexpr bool is_resource_v = is_resource<T>::value;
+
+template <template <class...> class C, class T>
+struct is_resource<C<T>> {
+    static constexpr bool value = std::is_same_v<C<T>, Scriptable<T>> && is_resource_v<T>;
+};
+
+{% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+template <>
+struct is_resource<{{name}}> {
+    static constexpr bool value = true;
+};
+{% endfor %}
+
+class Resources {
+
+public:
+    Resources();
+    ~Resources();
+
+    void push_label(ResourceLabel label);
+
+    void pop_label();
+
+    void release_with_label(ResourceLabel label);
+
+    template <class T>
+    StableResourcePool<T>& get_pool();
+
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    template <>
+    StableResourcePool<{{name}}>& get_pool<{{name}}>() { return pool_{{name}}; }
+    {% if "Node" in cls.ancestors: %}
+    template <>
+    StableResourcePool<Scriptable<{{name}}>>& get_pool<Scriptable<{{name}}>>() { return pool_{{name}}_scriptable; }
+    {% endif %}
+    {% endfor %}
+
+    template <class T, class ...Args>
+    Ref<T> new_item(Args&&... args) { return get_pool<T>().new_item(std::forward<Args>(args)...); }
+
+    template <class T, class Fun>
+    void foreach(Fun&& fun) {
+        if constexpr (std::is_void_v<T>) {
+            {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+            pool_{{name}}.foreach(fun);
+            {% endfor %}
+        }
+        {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+        else if constexpr (std::is_same_v<T, {{name}}>) {
+            pool_{{name}}.foreach(fun);
+            {% if "Node" in cls.ancestors: %}
+            pool_{{name}}_scriptable.foreach(fun);
+            {% endif %}
+            {% for child in cls.descendants: %}
+            pool_{{child}}.foreach(fun);
+            {% if "Node" in class_db[child].ancestors: %}
+            pool_{{child}}_scriptable.foreach(fun);
+            {% endif %}
+            {% endfor %}
+        }
+        {% endfor %}
+    }
+
+    template <class T, class Fun>
+    void foreach_ref(Fun&& fun) {
+        if constexpr (std::is_void_v<T>) {
+            {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+            pool_{{name}}.foreach_ref(fun);
+            {% endfor %}
+        }
+        {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+        else if constexpr (std::is_same_v<T, {{name}}>) {
+            pool_{{name}}.foreach_ref(fun);
+            {% if "Node" in cls.ancestors: %}
+            pool_{{name}}_scriptable.foreach_ref<{{name}}>(fun);
+            {% endif %}
+            {% for child in cls.descendants: %}
+            pool_{{child}}.foreach_ref<{{name}}>(fun);
+            {% if "Node" in class_db[child].ancestors: %}
+            pool_{{child}}_scriptable.foreach_ref<{{name}}>(fun);
+            {% endif %}
+            {% endfor %}
+        }
+        {% endfor %}
+    }
+
+    void scriptable_update(float dt);
+    void scriptable_render();
+
+private:
+    void set_labels_for_resource_pools(ResourceLabel label);
+
+    std::vector<ResourceLabel> label_stack;
+
+    // Resource pools
+    {% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+    StableResourcePool<{{name}}> pool_{{name}};
+    {% if "Node" in cls.ancestors: %}
+    StableResourcePool<Scriptable<{{name}}>> pool_{{name}}_scriptable;
+    {% endif %}
+    {% endfor %}
+
+};
+
+#endif //THESYSTEM_RESOURCES_H

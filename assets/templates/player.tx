@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <tileset firstgid="1" source="../tilesets/TX Prop Objects.tsx"/>
+ <object gid="6" width="32" height="64">
+  <properties>
+   <property name="script" type="file" value="../scripts/player.nut"/>
+  </properties>
+ </object>
+</template>

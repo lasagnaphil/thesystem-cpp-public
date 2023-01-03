@@ -1,0 +1,80 @@
+#pragma once
+
+#include <cstdint>
+#include <string_view>
+
+static constexpr uint32_t offset = 2166136261u;
+static constexpr uint32_t prime = 16777619u;
+
+constexpr uint32_t hash_str_helper(uint32_t partial, const char* str) {
+    return str[0] == 0? partial : hash_str_helper((partial^str[0])*prime, str+1);
+}
+
+constexpr uint32_t hash_str(const char* str) {
+    return hash_str_helper(offset, str);
+}
+
+template <class T>
+struct typeinfo {
+    using base_type = void;
+    static constexpr std::string_view name = "";
+    static constexpr uint32_t id = 0;
+    static constexpr uint32_t descendant_lookup_table[{{class_db|length + 1}}] = {false};
+};
+
+template <>
+struct typeinfo<void> {
+    using base_type = void;
+    static constexpr std::string_view name = "";
+    static constexpr uint32_t id = 0;
+    static constexpr uint32_t descendant_lookup_table[{{class_db|length + 1}}] = {false};
+};
+
+template <template <class...> class C, class T>
+struct typeinfo<C<T>> {
+    using base_type = typename typeinfo<T>::base_type;
+    static constexpr std::string_view name = typeinfo<T>::name;
+    static constexpr uint32_t id = typeinfo<T>::id;
+    static constexpr uint32_t descendant_lookup_table[{{class_db|length + 1}}] = typeinfo<T>::descendant_lookup_table;
+};
+
+{% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+class {{name}};
+{% endfor %}
+
+{% for name, cls in class_db.items() if "Resource" in cls.attrs: %}
+template <>
+struct typeinfo<{{name}}> {
+    {% if cls.base: %}
+    using base_type = {{cls.base}};
+    {% else %}
+    using base_type = void;
+    {% endif %}
+    static constexpr std::string_view name = "{{name}}";
+    static constexpr uint32_t id = {{cls.tid}};
+
+    static constexpr uint32_t descendant_lookup_table[{{class_db|length + 1}}] = {
+            {{ cls.descendant_lookup_table|join(',')|lower }}
+    };
+};
+{% endfor %}
+
+template <class T> inline constexpr std::string_view type_name(void) { return typeinfo<T>::name; }
+template <class T> inline constexpr std::string_view type_name(const T& type) { return typeinfo<T>::name; }
+
+template <class T>
+constexpr uint32_t type_id() { return typeinfo<T>::id; }
+
+template <class T>
+constexpr uint32_t parent_type_id() { return typeinfo<typename typeinfo<T>::base_type>::parent_id; }
+
+template <class T>
+using base_type_v = typename typeinfo<T>::base_type;
+
+#define REFLECTION_REGISTER_TYPE(_Type, _BaseType, _tid) \
+template <> \
+struct typeinfo<_Type> { \
+    using base_type = _BaseType; \
+    static constexpr std::string_view name = #_Type; \
+    static constexpr uint32_t id = _tid; \
+};
