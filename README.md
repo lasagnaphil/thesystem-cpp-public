@@ -1,4 +1,4 @@
-# thesystem-cpp (temporary public release)
+# thesystem-cpp
 
 ## Prerequisites
 
